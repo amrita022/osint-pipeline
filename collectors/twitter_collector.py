@@ -17,10 +17,11 @@ def fetch_twitter(query="OSINT", count=20):
         # Using Bearer Token for Twitter API v2
         client = tweepy.Client(bearer_token=TWITTER_BEARER)
         
-        # Search recent tweets
+        # Ensure max_results is between 10 and 100
+        max_results = max(10, min(count, 100))
         tweets = client.search_recent_tweets(
             query=query,
-            max_results=min(count, 100),  # Max 100 per request
+            max_results=max_results,
             tweet_fields=['created_at', 'author_id', 'text']
         )
         
@@ -42,6 +43,7 @@ def fetch_twitter(query="OSINT", count=20):
     except Exception as e:
         print(f"✗ Twitter Error: {str(e)}")
         return []
+
 
 # Test function
 if __name__ == "__main__":
