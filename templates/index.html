@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSINT Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #161b22;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .osint-text {
+            color: #00ff88;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex: 1;
+            max-width: 600px;
+            margin: 0 2rem;
+        }
+
+        .search-input {
+            flex: 1;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            color: #c9d1d9;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+        }
+
+        .search-btn {
+            background: #00ff88;
+            color: #0d1117;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .search-btn:hover {
+            background: #00d9ff;
+            transform: translateY(-1px);
+        }
+
+        .search-btn:active {
+            transform: translateY(0);
+        }
+
+        .search-btn:disabled {
+            background: #30363d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats-bar {
+            background: #161b22;
+            padding: 1rem 2rem;
+            display: flex;
+            gap: 2rem;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #8b949e;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #00ff88;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            color: #00ff88;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        .activity-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .activity-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .activity-card:hover {
+            border-color: #00ff88;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #0d1117;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .username {
+            font-weight: 600;
+            color: #00ff88;
+            font-size: 1rem;
+        }
+
+        .handle {
+            color: #8b949e;
+            font-size: 0.85rem;
+        }
+
+        .platform-badge {
+            background: #00d9ff;
+            color: #0d1117;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .card-content {
+            color: #c9d1d9;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid #30363d;
+        }
+
+        .sentiment {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .sentiment-positive { color: #3fb950; }
+        .sentiment-negative { color: #f85149; }
+        .sentiment-neutral { color: #8b949e; }
+
+        .view-btn {
+            background: transparent;
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .view-btn:hover {
+            background: #00ff88;
+            color: #0d1117;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #8b949e;
+        }
+
+        .spinner {
+            border: 3px solid #30363d;
+            border-top: 3px solid #00ff88;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #8b949e;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .error-message {
+            background: #f85149;
+            color: white;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .success-message {
+            background: #3fb950;
+            color: white;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <div class="logo-icon">🌐</div>
+            <span><span class="osint-text">OSINT</span> Tracker</span>
+        </div>
+        <div class="search-container">
+            <input 
+                type="text" 
+                class="search-input" 
+                id="searchInput"
+                placeholder="Search name, username, email..."
+                value="AI"
+            >
+            <button class="search-btn" id="searchBtn" onclick="searchOSINT()">
+                🔍 Search
+            </button>
+        </div>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-label">Total Records</span>
+            <span class="stat-value" id="totalRecords">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Platforms</span>
+            <span class="stat-value" id="platformCount">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Avg Sentiment</span>
+            <span class="stat-value" id="avgSentiment">0.00</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2 class="section-title">Recent Social Media Activity</h2>
+        
+        <div id="messageContainer"></div>
+        <div id="activityGrid" class="activity-grid"></div>
+    </div>
+
+    <script>
+        // Load recent activity on page load
+        window.onload = function() {
+            loadRecentActivity();
+            loadStats();
+        };
+
+        // Search on Enter key
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchOSINT();
+            }
+        });
+
+        async function searchOSINT() {
+            const query = document.getElementById('searchInput').value.trim();
+            
+            if (!query) {
+                showMessage('Please enter a search term', 'error');
+                return;
+            }
+
+            const searchBtn = document.getElementById('searchBtn');
+            searchBtn.disabled = true;
+            searchBtn.textContent = '⏳ Searching...';
+
+            showLoading();
+
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage(`✅ Collected ${data.count} records for "${query}"`, 'success');
+                    displayResults(data.data);
+                    loadStats();
+                } else {
+                    showMessage('❌ ' + (data.error || 'Search failed'), 'error');
+                    loadRecentActivity();
+                }
+            } catch (error) {
+                showMessage('❌ Error: ' + error.message, 'error');
+                loadRecentActivity();
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = '🔍 Search';
+            }
+        }
+
+        async function loadRecentActivity() {
+            showLoading();
+
+            try {
+                const response = await fetch('/api/recent?limit=20');
+                const data = await response.json();
+
+                if (data.success && data.data.length > 0) {
+                    displayResults(data.data);
+                } else {
+                    showEmptyState();
+                }
+            } catch (error) {
+                showMessage('❌ Error loading data: ' + error.message, 'error');
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('totalRecords').textContent = data.total_records;
+                    document.getElementById('platformCount').textContent = Object.keys(data.by_platform).length;
+                    document.getElementById('avgSentiment').textContent = data.avg_sentiment.toFixed(2);
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        function displayResults(data) {
+            const grid = document.getElementById('activityGrid');
+            grid.innerHTML = '';
+
+            data.forEach(item => {
+                const card = createActivityCard(item);
+                grid.appendChild(card);
+            });
+        }
+
+        function createActivityCard(item) {
+            const card = document.createElement('div');
+            card.className = 'activity-card';
+
+            const initials = item.user.substring(0, 2).toUpperCase();
+            const sentimentClass = getSentimentClass(item.sentiment);
+            const sentimentEmoji = getSentimentEmoji(item.sentiment);
+
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="avatar">${initials}</div>
+                    <div class="user-info">
+                        <div class="username">${escapeHtml(item.user)}</div>
+                        <div class="handle">@${escapeHtml(item.user)}</div>
+                    </div>
+                    <div class="platform-badge">${item.platform}</div>
+                </div>
+                <div class="card-content">
+                    ${escapeHtml(truncateText(item.text, 200))}
+                </div>
+                <div class="card-footer">
+                    <div class="sentiment ${sentimentClass}">
+                        ${sentimentEmoji} ${item.sentiment.toFixed(2)}
+                    </div>
+                    <a href="${item.url}" target="_blank" class="view-btn">
+                        View Post ↗
+                    </a>
+                </div>
+            `;
+
+            return card;
+        }
+
+        function getSentimentClass(score) {
+            if (score > 0.1) return 'sentiment-positive';
+            if (score < -0.1) return 'sentiment-negative';
+            return 'sentiment-neutral';
+        }
+
+        function getSentimentEmoji(score) {
+            if (score > 0.3) return '😊';
+            if (score > 0.1) return '🙂';
+            if (score < -0.3) return '😢';
+            if (score < -0.1) return '😐';
+            return '😶';
+        }
+
+        function truncateText(text, maxLength) {
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength) + '...';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showLoading() {
+            document.getElementById('messageContainer').innerHTML = '';
+            document.getElementById('activityGrid').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>Loading OSINT data...</div>
+                </div>
+            `;
+        }
+
+        function showEmptyState() {
+            document.getElementById('activityGrid').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔍</div>
+                    <h3>No data found</h3>
+                    <p>Try searching for something to collect OSINT data</p>
+                </div>
+            `;
+        }
+
+        function showMessage(message, type) {
+            const container = document.getElementById('messageContainer');
+            const className = type === 'error' ? 'error-message' : 'success-message';
+            
+            container.innerHTML = `<div class="${className}">${message}</div>`;
+            
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
