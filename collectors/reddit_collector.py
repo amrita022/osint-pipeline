@@ -13,11 +13,21 @@ def fetch_reddit(subreddit="technology", limit=20):
     Fetches posts from a specified subreddit
     """
     try:
+        # Debug: Show what credentials we're using
+        print(f"   Reddit ID: {REDDIT_ID[:5]}... (exists: {bool(REDDIT_ID)})")
+        print(f"   Reddit Secret: {REDDIT_SECRET[:5]}... (exists: {bool(REDDIT_SECRET)})")
+        
+        if not REDDIT_ID or not REDDIT_SECRET:
+            raise Exception("Reddit credentials not found in .env file")
+        
         reddit = praw.Reddit(
             client_id=REDDIT_ID,
             client_secret=REDDIT_SECRET,
-            user_agent="osint_lab_v1.0"
+            user_agent="osint_lab_v1.0_by_amrita"  # More specific user agent
         )
+        
+        # Test authentication
+        print(f"   Attempting to access r/{subreddit}...")
         
         results = []
         
@@ -40,6 +50,13 @@ def fetch_reddit(subreddit="technology", limit=20):
         
     except Exception as e:
         print(f"✗ Reddit Error: {str(e)}")
+        print(f"   Full error type: {type(e).__name__}")
+        
+        # Show helpful error messages
+        if "401" in str(e):
+            print("   → Check that REDDIT_ID and REDDIT_SECRET are correct")
+            print("   → Make sure there are no quotes or spaces in .env")
+        
         return []
 
 # Test function

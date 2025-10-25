@@ -14,6 +14,8 @@ from collectors.reddit_collector import fetch_reddit
 from collectors.github_collector import fetch_github
 from collectors.instagram_collector import fetch_instagram
 from collectors.quora_collector import fetch_quora
+from collectors.hackernews_collector import fetch_hackernews
+from collectors.devto_collector import fetch_devto
 
 # Import utilities
 from utils.cleaner import clean_text, filter_english
@@ -82,6 +84,20 @@ def search():
             collected_data.extend(quora_data)
         except Exception as e:
             print(f"Quora error: {e}")
+
+        # Hacker News (no auth needed!)
+        try:
+            hn_data = fetch_hackernews(limit=10)
+            collected_data.extend(hn_data)
+        except Exception as e:
+            print(f"Hacker News error: {e}")
+
+        # Dev.to (no auth needed!)
+        try:
+            devto_data = fetch_devto(query, 10)
+            collected_data.extend(devto_data)
+        except Exception as e:
+            print(f"Dev.to error: {e}")
         
         # Clean data
         for record in collected_data:
