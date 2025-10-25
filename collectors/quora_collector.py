@@ -1,35 +1,46 @@
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
+import time
 
 def fetch_quora(query="osint", limit=5):
     """
-    Scrapes Quora search results (basic scraping - may not always work)
+    Scrapes Quora search results with improved parsing
     """
     try:
-        url = f"https://www.quora.com/search?q={query.replace(' ', '+')}"
-        
+        # Add more realistic headers
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
         }
         
-        response = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(response.text, "html.parser")
+        url = f"https://www.quora.com/search?q={query.replace(' ', '+')}"
         
+        # Add timeout
+        response = requests.get(url, headers=headers, timeout=10)
+        
+        if response.status_code != 200:
+            print(f"Quora returned status code: {response.status_code}")
+            return []
+        
+        soup = BeautifulSoup(response.text, "html.parser")
         results = []
         
-        # Quora's structure changes often, this is a basic attempt
-        questions = soup.find_all("span", class_="q-text")
+        # Try multiple selectors for Quora's dynamic structure
+        questions = soup.find_all("div", class_="q-box")
         
-        for i, q in enumerate(questions):
-            if i >= limit:
-                break
-            
+        if not questions:
+            # Try alternative selectors
+            questions = soup.find_all("a", href=True)
+            questions = [q for q in questions if "/search" not in q.get('href', '')][:limit]
+        
+        for i, q in enumerate(questions[:limit]):
             text = q.get_text(strip=True)
-            if text:
+            if text and len(text) > 20:  # Minimum length filter
                 results.append({
                     "platform": "quora",
-                    "user": "anonymous",
+                    "user": "quora_user",
                     "timestamp": datetime.now().isoformat(),
                     "text": text,
                     "url": url
@@ -41,10 +52,3 @@ def fetch_quora(query="osint", limit=5):
     except Exception as e:
         print(f"✗ Quora Error: {str(e)}")
         return []
-
-# Test function
-if __name__ == "__main__":
-    print("Testing Quora Collector...")
-    data = fetch_quora("programming", 3)
-    for item in data[:2]:
-        print(item)
